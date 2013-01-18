@@ -6,6 +6,7 @@ import unittest
 import platform
 import random
 import string
+import os
 
 if platform.system().lower() == 'windows':
     _WINDOWS_OS = True
@@ -21,7 +22,8 @@ log = logging.getLogger(__name__)
 _RAND_CHARACTERS = string.ascii_letters + string.digits + string.punctuation
 def _gibberish(n):
     'Generate n gibberish characters'
-    return ''.join([random.choice(_RAND_CHARACTERS) for x in range(n)])
+    return str(os.getpid()) + \
+           ''.join([random.choice(_RAND_CHARACTERS) for x in range(n)]) 
 
 class MultiProcess(events.Plugin):
     configSection = 'multiprocess'
