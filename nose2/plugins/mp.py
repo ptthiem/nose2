@@ -1,7 +1,16 @@
 import logging
 import multiprocessing
+import multiprocessing.connection as mp_connection
 import select
 import unittest
+import platform
+import random
+import string
+
+if platform.system().lower() == 'windows':
+    _WINDOWS_OS = True
+else:
+    _WINDOWS_OS = False
 
 import six
 
@@ -9,6 +18,10 @@ from nose2 import events, loader, result, runner, session, util
 
 log = logging.getLogger(__name__)
 
+_RAND_CHARACTERS = string.ascii_letters + string.digits + string.punctuation
+def _gibberish(n):
+    'Generate n gibberish characters'
+    return ''.join([random.choice(_RAND_CHARACTERS) for x in range(n)])
 
 class MultiProcess(events.Plugin):
     configSection = 'multiprocess'
@@ -89,14 +102,30 @@ class MultiProcess(events.Plugin):
         # XXX create session export
         session_export = self._exportSession()
         procs = []
-        for i in range(0, self.procs):
-            parent_conn, child_conn = multiprocessing.Pipe()
-            proc = multiprocessing.Process(
-                target=procserver, args=(session_export, child_conn))
-            proc.daemon = True
-            proc.start()
-            procs.append((proc, parent_conn))
-        return procs
+        if _WINDOWS_OS:
+            authkey = six.b(_gibberish(128))
+            address = ('localhost', 0) #pick an ephemeral port
+            listener = mp_connection.Listener(address, authkey=authkey)
+        else:
+            listener = None
+
+        try:
+            for i in range(0, self.procs):
+                if _WINDOWS_OS:
+                    child_conn = (listener.address, authkey) 
+                else:
+                    parent_conn, child_conn = multiprocessing.Pipe()
+                proc = multiprocessing.Process(
+                    target=procserver, args=(session_export, child_conn))
+                proc.daemon = True
+                proc.start()
+                if _WINDOWS_OS:
+                    parent_conn = listener.accept()
+                procs.append((proc, parent_conn))
+            return procs
+        finally:    
+            if listener:
+                listener.close()
 
     def _flatten(self, suite):
         # XXX
@@ -172,6 +201,10 @@ def procserver(session_export, conn):
     # init logging system
     rlog = multiprocessing.log_to_stderr()
     rlog.setLevel(session_export['logLevel'])
+
+    if _WINDOWS_OS and hasattr(conn, "__iter__"):
+        address, authkey = conn
+        conn = mp_connection.Client(address, authkey=authkey)
 
     # make a real session from the "session" we got
     ssn = session.Session()
