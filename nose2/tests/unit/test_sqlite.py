@@ -18,7 +18,7 @@ class TestSQLitePlugin(TestCase):
         self.plugin.register()
         event = StartTestRunEvent(runner=None, suite=None, result=None,
                                   startTime=datetime.datetime.now(), 
-				  executeTests=None)
+                                  executeTests=None)
         self.plugin.startTestRun(event)
 
         class Test(unittest.TestCase):
@@ -51,11 +51,11 @@ class TestSQLitePlugin(TestCase):
         results = list()
         with sqlite3.connect(self.plugin.path) as db:
             db.row_factory = sqlite3.Row
-	    cur = db.cursor()
-	    cur.execute("select * from runs")
-	    runs = cur.fetchall()
-	    cur.execute("select * from results")
-	    results = cur.fetchall()
+            cur = db.cursor()
+            cur.execute("select * from runs")
+            runs = cur.fetchall()
+            cur.execute("select * from results")
+            results = cur.fetchall()
 
         if expected_runs is not None:
             self.assertEqual(len(runs), expected_runs)
@@ -199,6 +199,6 @@ class TestSQLitePlugin(TestCase):
            name = result['name'].split('\n')[0]
            self.assertIn(name, expected)
            outcome, message = expected[name]
-	   self.check_single_test(runs[0], result, outcome, message)
+           self.check_single_test(runs[0], result, outcome, message)
 
 
