@@ -9,6 +9,10 @@ import datetime, sqlite3, re
 class TestSQLitePlugin(TestCase):
     _RUN_IN_TEMP = True
 
+    def tearDown(self):
+        super(TestSQLitePlugin, self).tearDown()
+	self.plugin.stopTestRun(None)
+
     def setUp(self):
         super(TestSQLitePlugin, self).setUp()
         self.session = session.Session()
