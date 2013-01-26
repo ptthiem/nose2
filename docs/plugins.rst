@@ -54,7 +54,7 @@ argument.
    plugins/testid
    plugins/prof
    plugins/printhooks
-
+   plugins/sqlite
 
 Third-party Plugins
 ===================
