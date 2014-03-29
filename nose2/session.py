@@ -77,7 +77,7 @@ class Session(object):
         self.pluginargs = self.argparse.add_argument_group(
             'plugin arguments',
             'Command-line arguments added by plugins:')
-        self.config = configparser.ConfigParser()
+        self.config = configparser.SafeConfigParser()
         self.hooks = events.PluginInterface()
         self.plugins = []
         self.verbosity = 1
